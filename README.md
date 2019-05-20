@@ -4,6 +4,22 @@
 
 This is a fork of https://github.com/gojutin/create-svelte-site but with more templates and features.
 
+# Installation
+
+This is a command line utility, install it globally:
+
+### With npm
+
+```sh
+npm i create-svelte -g
+```
+
+### With yarn
+
+```sh
+yarn global add create-svelte
+```
+
 # Usage
 
 ## Creating a Site
