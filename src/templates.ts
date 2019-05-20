@@ -1,39 +1,74 @@
-export interface TemplateOption {
+interface Other {
   readonly name: string;
-  readonly template: string;
-  readonly port: string;
+  readonly value: string;
+  readonly branches?: boolean;
 }
 
-const TemplateOptions: readonly TemplateOption[] = [
+interface BundlerTemplate {
+  readonly rollup: string | null;
+  readonly webpack: string | null;
+  readonly other?: Other[];
+}
+
+export interface TemplateOption {
+  readonly name: string;
+  readonly template: string | BundlerTemplate;
+  readonly port: null | string | BundlerTemplate;
+}
+
+const TemplateOptions: TemplateOption[] = [
   {
-    name: "Svelte (rollup)",
-    template: "sveltejs/template",
-    port: "5000"
+    name: 'Svelte',
+    port: {
+      other: [
+        {
+          name: 'Component',
+          value: '5000'
+        },
+        {
+          name: 'TailwindCSS',
+          value: 'BRANCHES'
+        },
+        {
+          name: 'Typescript',
+          value: '5000'
+        }
+      ],
+      rollup: '5000',
+      webpack: '8080'
+    },
+    template: {
+      other: [
+        {
+          name: 'Component',
+          value: 'https://github.com/Axelen123/svelte-component-template#master'
+        },
+        {
+          branches: true,
+          name: 'TailwindCSS',
+          value: 'https://github.com/Axelen123/svelte-tailwind-template'
+        },
+        {
+          name: 'Typescript',
+          value: 'https://github.com/Axelen123/svelte-ts-template#master'
+        }
+      ],
+      rollup: 'https://github.com/sveltejs/template#master',
+      webpack: 'https://github.com/sveltejs/template-webpack#master'
+    }
   },
   {
-    name: "Svelte (webpack)",
-    template: "sveltejs/template-webpack",
-    port: "8080"
+    name: 'Svelte Native',
+    port: null,
+    template: 'https://github.com/halfnelson/svelte-native-template#master'
   },
   {
-    name: "Svelte (component)",
-    template: "sveltejs/component-template",
-    port: "5000"
-  },
-  {
-    name: "Svelte (custom element)",
-    template: "gojutin/svelte-custom-element",
-    port: "5000"
-  },
-  {
-    name: "Sapper (rollup)",
-    template: "sveltejs/sapper-template#rollup",
-    port: "3000"
-  },
-  {
-    name: "Sapper (webpack)",
-    template: "sveltejs/sapper-template#webpack",
-    port: "3000"
+    name: 'Sapper',
+    port: '3000',
+    template: {
+      rollup: 'https://github.com/sveltejs/sapper-template#rollup',
+      webpack: 'https://github.com/sveltejs/sapper-template#webpack'
+    }
   }
 ];
 

@@ -1,83 +1,137 @@
-import { Command, flags } from "@oclif/command";
-import chalk from "chalk";
-import { cli } from "cli-ux";
-import inquirer from "inquirer";
-import { performance } from "perf_hooks";
-import templateOptions, {TemplateOption} from './templates';
-var Git = require("nodegit");
+import { Command, flags } from '@oclif/command';
+import chalk from 'chalk';
+import { cli } from 'cli-ux';
+import { spawn } from 'child_process';
+import inquirer from 'inquirer';
+import { performance } from 'perf_hooks';
+import templateOptions, { TemplateOption } from './templates';
+import pEvent from 'p-event';
+const degit = require('degit'); // Using require because degit doesn't have types
 
-class CreateSvelteSite extends Command {
-  public static readonly description =
-    "Create a Svelte or Sapper site in a single command.";
+class CreateSvelteCmd extends Command {
+  public static readonly description = 'Create a Svelte or Sapper app in a single command.';
 
   public static readonly flags = {
-    help: flags.help({ char: "h" }),
-    version: flags.version({ char: "v" }),
+    help: flags.help({ char: 'h' }),
+    version: flags.version({ char: 'v' })
   };
 
-  public static readonly args: any[] = [{ name: "file" }];
+  public static readonly args: any[] = [ { name: 'file' } ];
 
   public async run(): Promise<any> {
-    const { args } = this.parse(CreateSvelteSite);
-    const {file : projectName} = args;
+    const { args } = this.parse(CreateSvelteCmd);
+    let { file: projectName } = args;
     if (!projectName) {
-      this.error(
-        `Please provide a project name. ${chalk.cyan(
-          "ex. create-svelte-site my-site"
-        )}`
-      );
+      const resp = await inquirer.prompt([
+        {
+          message: 'Enter name:',
+          name: 'name',
+          type: 'input',
+          validate: (n) => n !== ''
+        }
+      ]);
+      projectName = (resp as any).name;
     }
 
-    const response: any = await inquirer.prompt([
+    let response: any = await inquirer.prompt([
       {
         choices: templateOptions.filter(({ name }) => ({ name })),
-        message: "Please select a template.",
-        name: "projectType",
-        type: "list"
+        message: 'Select application type:',
+        name: 'projectType',
+        type: 'list'
       }
     ]);
     const { projectType } = response;
 
-    cli.action.start(`Great choice! Generating your ${projectType} app`);
-    const startTime = performance.now();
-
-    const { template, port } = templateOptions.find(
-      (o: TemplateOption) => o.name === projectType
-    ) as TemplateOption;
-
-
-
-  Git.Clone(`https://github.com/${template}`, projectName, 
-  
-  {
-    fetchOpts: {
-      callbacks: {
-        certificateCheck: function() {
-          // github will fail cert check on some OSX machines
-          // this overrides that check
-          return 0;
+    const templateOption = templateOptions.find((o: TemplateOption) => o.name === projectType) as TemplateOption;
+    const { template: templates, port: ports } = templateOption;
+    let templateUrl: string = '';
+    let port: string = '';
+    if (typeof templates == 'string') {
+      templateUrl = templates;
+      port = ports ? ports as string : '';
+    } else {
+      const choices = [ 'Rollup', 'Webpack' ];
+      if (templates.other) templates.other.forEach((item) => choices.push(item.name));
+      response = await inquirer.prompt([
+        {
+          choices: choices,
+          message: 'Select template:',
+          name: 'template',
+          type: 'list'
+        }
+      ]);
+      const { template } = response;
+      if (template === 'Rollup') {
+        templateUrl = templates.rollup as string;
+        port = typeof ports == 'string' ? ports as string : (ports as any).rollup;
+      } else if (template === 'Webpack') {
+        templateUrl = templates.webpack as string;
+        port = typeof ports == 'string' ? ports as string : (ports as any).webpack;
+      } else if (templates.other !== undefined) {
+        const obj = templates.other.find((x) => x.name === template) as any;
+        templateUrl = obj.value;
+        if (!!obj.branches) {
+          response = await inquirer.prompt([
+            {
+              choices: [ 'Rollup', 'Webpack' ],
+              message: 'Select bundler:',
+              name: 'bundler',
+              type: 'list'
+            }
+          ]);
+          const { bundler } = response;
+          port = bundler === 'Rollup' ? '5000' : '8080';
+          templateUrl = `${templateUrl}#${bundler.toLowerCase()}`;
         }
       }
     }
-  }).then(function() {
+    cli.action.start(`Great choice! Generating your ${projectType} app`);
+    const wait = () => new Promise((resolve) => setTimeout(resolve, 500));
+    await wait();
+    const startTime = performance.now();
+    const emitter = degit(templateUrl, {
+      cache: false,
+      force: true,
+      verbose: true
+    });
+    emitter.on('info', (info: any) => {
+      console.log(chalk.blue(info.message));
+    });
+    try {
+      await emitter.clone(projectName);
+    } catch (err) {
+      this.error(chalk.yellow('Something went wrong, try again! ') + chalk.red(err));
+      process.exit(1);
+    }
     const endTime = performance.now();
     const timeLapsed = Math.floor(endTime - startTime);
     cli.action.stop(chalk.green(`\n\n ✔ Done in ${timeLapsed}ms\n`));
-    console.log(chalk.green(`🚀  Your new site is ready to go!\n`));
-    console.log("Next Steps:\n");
-    console.log(chalk.cyan(`cd ${projectName}\n`));
-    console.log(chalk.cyan(`npm install\n`));
-    if (projectType !== "Svelte (component)") {
-      console.log(chalk.cyan(`npm run dev\n`));
-      console.log(
-        `Visit ${chalk.cyan(`http://localhost:${port}`)} in your browser.\n`
-      );
+    console.log(chalk.white(`Installing dependencies...\n\n`));
+    await wait();
+    const pwd = process.cwd();
+    process.chdir(projectName);
+    const proc = spawn('npm', [ 'i' ]);
+    proc.stdout.setEncoding('utf8');
+    proc.stderr.setEncoding('utf8');
+    proc.stdout.on('data', console.log);
+    proc.stderr.on('data', console.error);
+    const code = (await pEvent(proc, 'close')) as number;
+    process.chdir(pwd);
+    if (code != 0) {
+      this.error(chalk.yellow('Error: ') + chalk.red('Could not install dependencies. Check output for more info'));
     }
-  }).catch((error: any) => {
-    console.error("Oops...something went wrong. Please try again.", error)
-  })
-
+    console.log(chalk.green(`\n\n🚀  Your new app is ready to go!\n`));
+    console.log(chalk.white('Next Steps:\n'));
+    console.log(chalk.cyan(`cd ${projectName}\n`));
+    if (port !== '') {
+      console.log(chalk.cyan(`npm run dev\n`));
+      console.log(chalk.white(`Visit ${chalk.cyan(`http://localhost:${port}`)} in your browser.\n`));
+    } else {
+      console.log(chalk.cyan(`tns run --bundle\n`));
+      console.log(chalk.white(`The app should open on your device.\n`));
+    }
   }
 }
 
-export = CreateSvelteSite;
+export = CreateSvelteCmd;
