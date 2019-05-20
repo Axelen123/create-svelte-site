@@ -6,7 +6,7 @@
   "bin": {
     "create-svelte": "./bin/run"
   },
-  "bugs": "https://github.com/Axelen123/create-svelte/issues",
+  "bugs": "https://github.com/Axelen123/create-svelte-site/issues",
   "dependencies": {
     "@oclif/command": "^1",
     "@oclif/config": "^1",
@@ -41,7 +41,7 @@
     "/bin",
     "/lib"
   ],
-  "homepage": "https://github.com/Axelen123/create-svelte",
+  "homepage": "https://github.com/Axelen123/create-svelte-site",
   "keywords": [
     "oclif",
     "svelte",
@@ -54,7 +54,7 @@
   "oclif": {
     "bin": "create-svelte"
   },
-  "repository": "Axelen123/create-svelte",
+  "repository": "Axelen123/create-svelte-site",
   "scripts": {
     "posttest": "tslint -p test -t stylish",
     "fix": "tslint -p test -t stylish --fix",
