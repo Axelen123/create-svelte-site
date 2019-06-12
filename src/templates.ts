@@ -50,7 +50,7 @@ const TemplateOptions: TemplateOption[] = [
         },
         {
           name: 'Typescript',
-          value: 'https://github.com/Axelen123/svelte-ts-template#master'
+          value: 'https://github.com/pyoner/svelte-ts-template#master'
         }
       ],
       rollup: 'https://github.com/sveltejs/template#master',
