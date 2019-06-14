@@ -4,7 +4,8 @@
   "version": "1.1.0",
   "author": "Ax333l",
   "bin": {
-    "create-svelte": "./bin/run"
+    "create-svelte": "./bin/run",
+    "create-svelte-app": "./bin/run"
   },
   "bugs": "https://github.com/Axelen123/create-svelte-site/issues",
   "dependencies": {
