@@ -23,6 +23,7 @@ yarn global add create-svelte
 # Usage
 
 ## Creating a Site
+
 **You’ll need to have Node 8.10.0 or later on your local development machine** (but it’s not required on the server). You can use [nvm](https://github.com/creationix/nvm#installation) (macOS/Linux) or [nvm-windows](https://github.com/coreybutler/nvm-windows#node-version-manager-nvm-for-windows) to easily switch Node versions between different projects.
 
 ### With npx
@@ -34,13 +35,13 @@ yarn global add create-svelte
 ### With npm
 
 ```sh
-  npm init svelte myapp
+  npm init svelte-app myapp
 ```
 
 ### With yarn
 
 ```sh
-  yarn create svelte myapp
+  yarn create svelte-app myapp
 ```
 
 _Note: We are using `myapp` as an example. This can be any project name you choose._
