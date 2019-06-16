@@ -59,7 +59,7 @@
   "scripts": {
     "posttest": "tslint -p test -t stylish",
     "fix": "tslint -p test -t stylish --fix",
-    "prepack": "rm -rf lib && tsc -b",
+    "prepack": "tsc -b",
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\""
   },
   "types": "lib/index.d.ts"
